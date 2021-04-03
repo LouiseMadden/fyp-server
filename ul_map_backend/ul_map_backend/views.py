@@ -3,13 +3,63 @@
 #serachview inside use create http function - don't use get use push
 #would also need roomsearchview and directionsview
 
+from rest_framework import response
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 
 from ul_map_backend import models, settings
 from django.db.models import Q
 from django.core import exceptions
+from collections import OrderedDict
+
 import requests
+
+
+def _init_building_codes():
+    building_codes = OrderedDict()
+    building_codes['AD'] = 'Analog Devices'
+    building_codes['A'] = 'Main Building, Block A'
+    building_codes['B'] = 'Main Building, Block B'
+    building_codes['CS'] = 'Computer Science'
+    building_codes['C'] = 'Main Building, Block C'
+    building_codes['D'] = 'Main Building, Block D'
+    building_codes['ER'] = 'Engineering Research'
+    building_codes['E'] = 'Main Building, Block E'
+    building_codes['F'] = 'Foundation Building'
+    building_codes['GEMS'] = 'Graduate Entry Medical School'
+    building_codes['HS'] = 'Health Sciences'
+    building_codes['IB'] = 'International Business Centre'
+    building_codes['KB'] = 'Kemmy Business School'
+    building_codes['LC'] = 'Languages Building'
+    building_codes['L'] = 'Lonsdale'
+    building_codes['MC'] = 'Millstream'
+    building_codes['P'] = 'PESS'
+    building_codes['SR'] = 'Schrodinger'
+    building_codes['S'] = 'Schumann'
+    building_codes['T'] = 'Tierney Building'
+    return building_codes
+
+
+BUILDING_CODES = _init_building_codes()
+
+
+class RoomSearchViewset(ViewSet):
+    def list(self, request):
+
+        code = request.query_params['code']
+
+        resp = {}
+        for key, value in BUILDING_CODES.items():
+            if key in code:
+                resp['building'] = value
+                resp['floor'] = code[len(key):len(key) + 1]
+                resp['room'] = code[len(key) + 1:]
+                return Response(resp)
+
+        resp['error'] = 'Building not Found'
+        return Response(resp)
+
+ 
 
 
 class SearchViewset(ViewSet):

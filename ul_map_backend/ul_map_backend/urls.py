@@ -21,6 +21,7 @@ from rest_framework import routers
 from ul_map_backend import views
 
 router = routers.DefaultRouter()
+router.register(r'roomSearch', views.RoomSearchViewset, basename='RoomSearch')
 router.register(r'search', views.SearchViewset, basename='Search')
 router.register(r'directions', views.DirectionViewset, basename='Directions')
 
