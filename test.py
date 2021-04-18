@@ -1,8 +1,8 @@
 import requests
 
-url = 'http://localhost:8000/api/roomSearch/'
+url = 'http://localhost:8000/api/directions/'
 
-params = {'code':'CSG001'}
+params = {'start':'main', 'end':'Computer Science'}
 
 resp = requests.get(url,params=params)
 

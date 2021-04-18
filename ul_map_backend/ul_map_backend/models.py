@@ -24,4 +24,6 @@ class Location(models.Model):
         Door, on_delete=models.CASCADE, related_name='+', null=True, blank=True
     )
 
+    eircode = models.CharField(max_length=7, null=True, blank=True)
+
     tag = models.CharField(max_length=50)

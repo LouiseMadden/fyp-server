@@ -67,7 +67,10 @@ class SearchViewset(ViewSet):
     def list(self, request):
         query_params = request.query_params
         name = query_params["name"]
-        resp = nameLookup(name)
+        if name.startswith('V94'):
+            resp = eircodeLookup(name)
+        else:
+            resp = nameLookup(name)
 
         return Response(resp)
 
@@ -83,21 +86,33 @@ class DirectionViewset(ViewSet):
         start_coords = nameLookup(start_name)
         end_coords = nameLookup(end_name)
         
-        start_coords = validateCoords(start_coords)
-        end_coords = validateCoords(end_coords)
+        start_coords = validateCoords(start_coords[0])
+        end_coords = validateCoords(end_coords[0])
 
-        start = f"{start_coords['latitude']},{start_coords['longitude']}"
-        end = f"{end_coords['latitude']},{end_coords['longitude']}"
+        start = f"{start_coords['longitude']},{start_coords['latitude']}"
+        end = f"{end_coords['longitude']},{end_coords['latitude']}"
 
-        url = f'http://router.project-osrm.org/route/v1/foot/{start};{end}'
+        url = (
+            f'http://router.project-osrm.org/route/v1/foot/{start};{end}'
+            '?steps=true&geometries=polyline6'
+        )
         resp = requests.get(url)
 
+        resp_data = resp.json()
         breakpoint()
-        return resp
+        waypoints = resp_data['waypoints']
+        points = []
+        for waypoint in waypoints:
+            points.append({
+                'latitude': waypoint['location'][1],
+                'longitude': waypoint['location'][0]
+            })
+
+        return Response(points)
 
 def nameLookup(name):
     try:
-        location = models.Location.objects.get(
+        locations = models.Location.objects.filter(
             Q(name_1__contains=name) | 
             Q(name_2__contains=name) |
             Q(name_3__contains=name)
@@ -107,10 +122,30 @@ def nameLookup(name):
             "error": "Location not found"
         }
     else:
+
+        return [
+            {
+                "latitude": location.door_1.latitude,
+                "longitude": location.door_1.longitude
+            } for location in locations
+        ]
+
+def eircodeLookup(name):
+    try:
+        location = models.Location.objects.get(Q(eircode__exact=name))
+    except models.Location.DoesNotExist:
         return {
-            "latitude": location.door_1.latitude,
-            "longitude": location.door_1.longitude
+            "error": "Location not found"
         }
+    else:
+
+        return [
+            {
+                "latitude": location.door_1.latitude,
+                "longitude": location.door_1.longitude
+            }
+        ]
+
 
 def validateCoords(coords):
     try:
