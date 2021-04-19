@@ -83,8 +83,12 @@ class DirectionViewset(ViewSet):
         end_name = query_params["end"]
 
         # Call nameLookup for both to use for directions
-        start_coords = nameLookup(start_name)
-        end_coords = nameLookup(end_name)
+        if start_name.startswith('V94') or end_name.startswith('V94'):
+            start_coords = eircodeLookup(start_name)
+            end_coords = eircodeLookup(end_name)
+        else:
+            start_coords = nameLookup(start_name)
+            end_coords = nameLookup(end_name)
         
         start_coords = validateCoords(start_coords[0])
         end_coords = validateCoords(end_coords[0])
@@ -99,7 +103,6 @@ class DirectionViewset(ViewSet):
         resp = requests.get(url)
 
         resp_data = resp.json()
-        breakpoint()
         waypoints = resp_data['waypoints']
         points = []
         for waypoint in waypoints:
